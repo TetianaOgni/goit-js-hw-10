@@ -1,32 +1,20 @@
 import debounce from 'lodash.debounce';
-import { fetchCountries } from './fetchCountries';
-import '../css/styles.css';
-import refs from './refs.js';
 import Notiflix from 'notiflix';
+import { fetchCountries } from './fetchCountries';
+import refs from './refs.js';
+import '../css/styles.css';
 
 const DEBOUNCE_DELAY = 300;
 
 refs.inputEl.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
 
 function onInput(event) {
-  refs.countryInfo.innerHTML = '';
-  refs.countriesList.innerHTML = '';
+  cleanCountries();
   const value = event.target.value.trim();
   if (!value) {
     return;
-  } else if (value.length === 1) {
-    return Notiflix.Notify.info(
-      'Too many matches found. Please enter a more specific name.'
-    );
-  } else
-    fetchCountries(value)
-      .then(data => {
-        if (data.length === 0) {
-          return 'Oops, there is no country with that name';
-        }
-        const markup = createMarkup(data);
-      })
-      .catch(onError);
+  }
+  fetchCountries(value).then(createMarkup).catch(onError);
 }
 
 function createMarkup(data) {
@@ -38,6 +26,10 @@ function createMarkup(data) {
     const markup = createMarkupCountriesList(data);
     const elem = refs.countriesList;
     updateMarkup(markup, elem);
+  } else if (data.length > 10) {
+    Notiflix.Notify.info(
+      'Too many matches found. Please enter a more specific name.'
+    );
   }
 }
 function createMarkupCountryInfo(data) {
@@ -70,6 +62,7 @@ function updateMarkup(markup, elem) {
 }
 
 function onError(error) {
+  console.log(error);
   Notiflix.Notify.failure('Oops, there is no country with that name');
 }
 function cleanCountries() {
